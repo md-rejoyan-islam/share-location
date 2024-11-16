@@ -1,4 +1,6 @@
+import Header from "@/components/shared/header";
 import type { Metadata } from "next";
+import { ThemeProvider } from "next-themes";
 import localFont from "next/font/local";
 import "./globals.css";
 
@@ -28,7 +30,15 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <ThemeProvider
+          enableSystem
+          attribute="class"
+          defaultTheme="light"
+          themes={["light", "dark"]}
+        >
+          <Header />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
