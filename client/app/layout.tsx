@@ -1,7 +1,10 @@
 import Header from "@/components/shared/header";
+import { LocationProvider } from "@/provider/location-provider";
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 import localFont from "next/font/local";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
 
 const geistSans = localFont({
@@ -30,15 +33,29 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ThemeProvider
-          enableSystem
-          attribute="class"
-          defaultTheme="light"
-          themes={["light", "dark"]}
-        >
-          <Header />
-          {children}
-        </ThemeProvider>
+        <LocationProvider>
+          <ThemeProvider
+            enableSystem
+            attribute="class"
+            defaultTheme="light"
+            themes={["light", "dark"]}
+          >
+            <Header />
+            {children}
+          </ThemeProvider>
+          <ToastContainer
+            position="top-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="light"
+          />
+        </LocationProvider>
       </body>
     </html>
   );

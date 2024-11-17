@@ -19,9 +19,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Home, MapPin, Share2, X } from "lucide-react";
+import LocationContext from "@/context/location-context";
+import { GeolocationPosition } from "@/lib/types";
+import { Home, X } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { useContext, useEffect, useState } from "react";
+import Map from "./map/map";
 
 interface SharedUser {
   name: string;
@@ -38,24 +42,47 @@ const sharedUser: SharedUser = {
 };
 
 // Simulated Google Maps API
-const GoogleMap = ({ location }: { location: string }) => (
+const GoogleMap = ({ location }: { location: GeolocationPosition | null }) => (
   <div className="w-full h-full bg-gray-300 dark:bg-gray-700 rounded-lg overflow-hidden relative">
     <div className="absolute inset-0 flex items-center justify-center">
-      <MapPin className="h-8 w-8 text-red-500" />
+      {/* <MapPin className="h-8 w-8 text-red-500" /> */}
+      <Map location={location} />
+      {/* <MapPage location={position} /> */}
     </div>
-    <div className="absolute bottom-4 left-4 right-4 bg-white dark:bg-gray-800 p-2 rounded shadow">
-      <p className="text-sm text-gray-600 dark:text-gray-300">{location}</p>
+    <div className="absolute bottom-4 left-4 right-4 bg-white dark:bg-gray-800 p-2 rounded shadow z-[400]">
+      <p className="text-sm text-gray-600 dark:text-gray-300">dhaka</p>
     </div>
   </div>
 );
 
 export function ViewerPageComponent() {
+  const { roomId } = useParams();
+
+  const { socket, connectSocket, position, visitorRoomInfo } =
+    useContext(LocationContext);
+
   const [isNameDialogOpen, setIsNameDialogOpen] = useState(true);
+  const [wantSharedLocation, setWantSharedLocation] = useState(false);
   const [viewerName, setViewerName] = useState("");
-  const [isShareOptionOpen, setIsShareOptionOpen] = useState(false);
   const [sharedLocation, setSharedLocation] = useState<SharedUser | null>(null);
   const [isSharing, setIsSharing] = useState(false);
-  const [wantSharedLocation, setWantSharedLocation] = useState(false);
+
+  console.log(visitorRoomInfo);
+
+  // connect to the socket
+  useEffect(() => {
+    connectSocket();
+    return () => {
+      if (socket?.connected) {
+        socket.disconnect();
+      }
+    };
+  }, []);
+  // useEffect(() => {
+  //   if (!viewerName) {
+  //     setIsNameDialogOpen(true);
+  //   }
+  // }, [viewerName]);
 
   useEffect(() => {
     // Simulate fetching shared location
@@ -70,22 +97,16 @@ export function ViewerPageComponent() {
       | React.MouseEvent<HTMLButtonElement, MouseEvent>
   ) => {
     e.preventDefault();
-    if (viewerName) {
-      setIsNameDialogOpen(false);
-      setIsShareOptionOpen(true);
-    }
-  };
+    setIsNameDialogOpen(false);
 
-  const handleShareOption = (share: boolean) => {
-    setIsShareOptionOpen(false);
-    setIsSharing(share);
-    if (share) {
-      console.log(`${viewerName} agreed to share their location`);
-      // Here you would typically send this information to your backend
-    }
-    if (wantSharedLocation) {
-      console.log(`${viewerName} wants to receive shared location`);
-      // Here you would typically request the shared location from your backend
+    // connectSocket();
+    if (socket?.connected) {
+      socket.emit("joinRoom", {
+        roomId,
+        userName: viewerName,
+        wantSharedLocation,
+        position,
+      });
     }
   };
 
@@ -125,7 +146,7 @@ export function ViewerPageComponent() {
                       </p>
                     </div>
                     <div className="h-[300px]">
-                      <GoogleMap location={sharedLocation.location} />
+                      <GoogleMap location={visitorRoomInfo?.position || null} />
                     </div>
                   </div>
                 ) : (
@@ -156,7 +177,11 @@ export function ViewerPageComponent() {
       </div>
 
       <Dialog open={isNameDialogOpen} onOpenChange={setIsNameDialogOpen}>
-        <DialogContent>
+        <DialogContent
+          onInteractOutside={(e) => {
+            e.preventDefault();
+          }}
+        >
           <DialogHeader>
             <DialogTitle>Enter Your Name</DialogTitle>
             <DialogDescription>
@@ -186,29 +211,11 @@ export function ViewerPageComponent() {
               </label>
             </div>
             <DialogFooter>
-              <Button type="submit">Submit</Button>
+              <Button type="submit" disabled={!viewerName}>
+                Submit
+              </Button>
             </DialogFooter>
           </form>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isShareOptionOpen} onOpenChange={setIsShareOptionOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Share Your Location</DialogTitle>
-            <DialogDescription>
-              Do you want to share your location with this user?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => handleShareOption(false)}>
-              No
-            </Button>
-            <Button onClick={() => handleShareOption(true)}>
-              <Share2 className="h-4 w-4 mr-2" />
-              Yes, Share My Location
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

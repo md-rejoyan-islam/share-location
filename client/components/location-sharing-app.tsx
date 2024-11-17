@@ -3,8 +3,11 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import LocationContext from "@/context/location-context";
+import { GeolocationPosition } from "@/lib/types";
 import { MapPin, Share2, UserCheck, Users, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import Map from "./map/map";
 
 interface User {
   id: number;
@@ -35,29 +38,73 @@ const users: User[] = [
 ];
 
 // Simulated Google Maps API
-const GoogleMap = ({ location }: { location: string }) => (
+const GoogleMap = ({
+  location,
+  position,
+}: {
+  position: GeolocationPosition | null;
+  location: string;
+}) => (
   <div className="w-full h-full bg-gray-300 dark:bg-gray-700 rounded-lg overflow-hidden relative">
     <div className="absolute inset-0 flex items-center justify-center">
-      <MapPin className="h-8 w-8 text-red-500" />
+      {/* <MapPin className="h-8 w-8 text-red-500" /> */}
+      <Map location={position} />
+      {/* <MapPage location={position} /> */}
     </div>
-    <div className="absolute bottom-4 left-4 right-4 bg-white dark:bg-gray-800 p-2 rounded shadow">
+    <div className="absolute bottom-4 left-4 right-4 bg-white dark:bg-gray-800 p-2 rounded shadow z-[400]">
       <p className="text-sm text-gray-600 dark:text-gray-300">{location}</p>
     </div>
   </div>
 );
 
 export function LocationSharingApp() {
-  const [location, setLocation] = useState("");
+  const {
+    connectSocket,
+    location,
+    position,
+    roomInfo,
+    socket,
+    socketStatus,
+    setSocketStatus,
+    setRoomInfo,
+  } = useContext(LocationContext);
+
   const [shareName, setShareName] = useState("");
-  const [currentLocation, setCurrentLocation] = useState("Loading...");
   const [connectedUsers, setConnectedUsers] = useState<User[]>([]);
 
-  useEffect(() => {
-    // Simulate getting current location
-    setTimeout(() => {
-      setCurrentLocation("New York, NY 10001, USA");
-    }, 2000);
+  // create room
+  // const handleCreateRoom = () => {
+  //   if (socket) {
+  //     if (socket.connected) {
+  //       socket.emit("createRoom", {
+  //         position,
+  //         hostName: "Alice",
+  //       });
+  //     }
+  //     socket.on("roomCreated", (data: userRoom) => {
+  //       toast.success("You are live!", {
+  //         autoClose: 2000,
+  //       });
+  //       console.log(data);
 
+  //       setRoomInfo(data);
+  //     });
+  //   }
+  // };
+
+  console.log(roomInfo);
+
+  useEffect(() => {
+    connectSocket();
+    return () => {
+      if (socket?.connected) {
+        socket.disconnect();
+      }
+    };
+  }, []);
+
+  // show users
+  useEffect(() => {
     // Simulate connecting with multiple users
     setTimeout(() => {
       setConnectedUsers([...users]);
@@ -66,15 +113,26 @@ export function LocationSharingApp() {
 
   const handleDisconnect = (userId: number) => {
     setConnectedUsers(connectedUsers.filter((user) => user.id !== userId));
+    setSocketStatus("DISCONNECTED");
+  };
+  const handleDisconnectLocation = () => {
+    if (socket) {
+      socket.emit("removeRoom", {
+        roomId: roomInfo?.roomId,
+      });
+    }
   };
 
-  const handleShareLocation = () => {
-    if (location && shareName) {
-      // In a real app, this would send the data to a server
-      console.log(`Sharing location: ${location} as ${shareName}`);
-      setLocation("");
-      setShareName("");
+  const handleShareLocation = async () => {
+    // create room
+    if (socket?.connected && !roomInfo) {
+      socket.emit("createRoom", {
+        position,
+        hostName: "JOy",
+      });
     }
+
+    setSocketStatus("CONNECTING");
   };
 
   return (
@@ -96,7 +154,7 @@ export function LocationSharingApp() {
                     id="current-location"
                     className="text-gray-800 dark:text-white"
                   >
-                    {currentLocation}
+                    {location}
                   </span>
                 </div>
               </div>
@@ -113,7 +171,7 @@ export function LocationSharingApp() {
                     id="location"
                     placeholder="Enter location to share"
                     value={location}
-                    onChange={(e) => setLocation(e.target.value)}
+                    // onChange={(e) => setLocation(e.target.value)}
                   />
                   <Input
                     type="text"
@@ -127,10 +185,34 @@ export function LocationSharingApp() {
                       <MapPin className="h-4 w-4 mr-2" />
                       Get Current
                     </Button>
-                    <Button className="flex-grow" onClick={handleShareLocation}>
+                    {roomInfo === null ? (
+                      <Button
+                        className="flex-grow"
+                        onClick={handleShareLocation}
+                        disabled={roomInfo !== null}
+                      >
+                        <Share2 className="h-4 w-4 mr-2" />
+                        Share Location
+                      </Button>
+                    ) : (
+                      <Button
+                        className="flex-grow bg-red-500 text-white"
+                        onClick={handleDisconnectLocation}
+                      >
+                        <Share2 className="h-4 w-4 mr-2" />
+                        Stop Location
+                      </Button>
+                    )}
+                    {/* <Button
+                      className="flex-grow"
+                      onClick={handleShareLocation}
+                      disabled={
+                        socketStatus === "CONNECTING" || roomInfo !== null
+                      }
+                    >
                       <Share2 className="h-4 w-4 mr-2" />
                       Share Location
-                    </Button>
+                    </Button> */}
                   </div>
                 </div>
               </div>
@@ -153,22 +235,23 @@ export function LocationSharingApp() {
                 <h2 className="text-lg font-semibold mb-2 text-green-800 dark:text-green-100">
                   Connected Users
                 </h2>
-                {connectedUsers.length > 0 ? (
+                {roomInfo && roomInfo?.totalConnectedUsers?.length > 0 ? (
                   <ul className="space-y-4">
-                    {connectedUsers.map((user) => (
+                    {roomInfo.totalConnectedUsers.map((user) => (
                       <li
-                        key={user.id}
+                        key={user.userId}
                         className="bg-white dark:bg-gray-700 p-3 rounded-md shadow-sm"
                       >
                         <div className="flex items-center justify-between text-green-700 dark:text-green-200 mb-2">
                           <div className="flex items-center">
                             <UserCheck className="h-5 w-5 mr-2" />
-                            {user.name} ({user.shareName})
+                            {user.userName}
+                            {/* ({user.shareName}) */}
                           </div>
                           <Button
                             variant="destructive"
                             size="sm"
-                            onClick={() => handleDisconnect(user.id)}
+                            // onClick={() => handleDisconnect(user.userId)}
                           >
                             <X className="h-4 w-4 mr-2" />
                             Disconnect
@@ -176,7 +259,8 @@ export function LocationSharingApp() {
                         </div>
                         <div className="text-sm text-green-600 dark:text-green-300">
                           <MapPin className="h-4 w-4 inline mr-2" />
-                          {user.location}
+                          {/* {user.position} */}
+                          Dhaka
                         </div>
                       </li>
                     ))}
@@ -193,7 +277,7 @@ export function LocationSharingApp() {
                 Map View
               </h2>
               <div className="h-[400px] md:h-[600px]">
-                <GoogleMap location={currentLocation} />
+                <GoogleMap location={location} position={position} />
               </div>
             </div>
           </div>
