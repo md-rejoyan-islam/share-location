@@ -1,4 +1,6 @@
+import Footer from "@/components/shared/footer";
 import Header from "@/components/shared/header";
+import { Toaster } from "@/components/ui/toaster";
 import { LocationProvider } from "@/provider/location-provider";
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
@@ -41,8 +43,11 @@ export default function RootLayout({
             themes={["light", "dark"]}
           >
             <Header />
-            {children}
+            <main>{children}</main>
+            <Footer />
           </ThemeProvider>
+          <Toaster />
+
           <ToastContainer
             position="top-right"
             autoClose={5000}

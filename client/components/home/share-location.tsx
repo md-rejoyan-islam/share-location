@@ -1,7 +1,8 @@
 import LocationContext from "@/context/location-context";
+import { useToast } from "@/hooks/use-toast";
+import { isEmail } from "@/lib/utils";
 import { Clipboard, Share2 } from "lucide-react";
 import { useContext, useState } from "react";
-import { toast } from "react-toastify";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -18,15 +19,33 @@ export default function ShareLocation({}) {
     name: "",
     email: "",
   });
+  const { toast } = useToast();
 
   console.log(hostRooom);
 
   // handle share location
   const handleShareLocation = async () => {
     if (!userInfo.email)
-      return toast.error("Please enter a email to share location");
+      return toast({
+        variant: "destructive",
+        title: "Uh oh! Email is required!",
+        description: "Please enter a email to share location",
+      });
+
+    // test email validation
+    if (!isEmail(userInfo.email))
+      return toast({
+        variant: "destructive",
+        title: "Uh oh! Invalid email!",
+        description: "Please enter a valid email to share location",
+      });
+
     if (!userInfo.name)
-      return toast.error("Please enter a name to share location");
+      return toast({
+        variant: "destructive",
+        title: "Uh oh! Name is required!",
+        description: "Please enter a name to share location",
+      });
 
     // create room
     if (socket?.connected && !hostRooom?.roomId) {
@@ -50,7 +69,7 @@ export default function ShareLocation({}) {
   };
 
   return (
-    <div className="mb-4">
+    <div className="mb-6">
       <Label
         htmlFor="location"
         className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -72,7 +91,7 @@ export default function ShareLocation({}) {
           value={userInfo.name}
           onChange={(e) => setUserInfo({ ...userInfo, name: e.target.value })}
         />
-        <div className="flex space-x-2">
+        <div className="flex gap-2 flex-wrap-reverse">
           <Button
             variant="outline"
             className="flex-grow"
@@ -80,7 +99,9 @@ export default function ShareLocation({}) {
               navigator?.clipboard?.writeText(
                 window.location.href + "location/" + hostRooom?.roomId
               );
-              toast.success("URL copied to clipboard");
+              toast({
+                description: "URL copied to clipboard.",
+              });
             }}
           >
             <Clipboard className="h-4 w-4 mr-2" />

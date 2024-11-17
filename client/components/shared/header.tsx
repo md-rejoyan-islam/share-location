@@ -1,12 +1,11 @@
 "use client";
 
 import { Switch } from "@/components/ui/switch";
-import { MapPin, Menu, Moon, Sun, X } from "lucide-react";
+import { MapPin, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Button } from "../ui/button";
 
 export default function Header() {
   const pathname = usePathname();
@@ -41,13 +40,13 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60  ">
-      <div className="container flex h-14 max-w-7xl mx-auto items-center px-4">
-        <div className="hidden md:flex">
+      <div className="container flex h-14 max-w-6xl mx-auto items-center px-4 lg:px-0">
+        <div className="flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <MapPin className="h-6 w-6" />
             <span className="font-bold">Location Share</span>
           </Link>
-          <nav className="flex items-center space-x-6 text-sm font-medium">
+          {/* <nav className="flex items-center space-x-6 text-sm font-medium">
             <Link
               href="/"
               className={
@@ -68,14 +67,15 @@ export default function Header() {
             >
               Viewer
             </Link>
-          </nav>
+          </nav> */}
         </div>
-        <div className="flex md:hidden">
+        {/* <div className="flex md:hidden">
           <Button
             variant="ghost"
             size="icon"
             onClick={toggleMenu}
             aria-label="Toggle menu"
+            className="border"
           >
             {isMenuOpen ? (
               <X className="h-5 w-5" />
@@ -83,11 +83,9 @@ export default function Header() {
               <Menu className="h-5 w-5" />
             )}
           </Button>
-        </div>
+        </div> */}
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-          <div className="w-full flex-1 md:w-auto md:flex-none">
-            {/* You can add a search input or other controls here if needed */}
-          </div>
+          <div className="w-full flex-1 md:w-auto md:flex-none"></div>
           <nav className="flex items-center">
             <Switch
               checked={theme === themes[1].key}
@@ -109,7 +107,7 @@ export default function Header() {
         </div>
       </div>
       {isMenuOpen && (
-        <div className="md:hidden">
+        <div className="md:hidden border-t">
           <nav className="flex flex-col space-y-4 p-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <Link
               href="/"

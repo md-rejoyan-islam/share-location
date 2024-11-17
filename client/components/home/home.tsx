@@ -4,11 +4,11 @@ import { Label } from "@/components/ui/label";
 import LocationContext from "@/context/location-context";
 import { MapPin } from "lucide-react";
 import { useContext, useEffect } from "react";
-import GoogleMap from "./google-map";
-import ConnectedUser from "./home/connected-user";
-import ShareLocation from "./home/share-location";
+import GoogleMap from "../google-map";
+import ConnectedUser from "./connected-user";
+import ShareLocation from "./share-location";
 
-export function LocationSharingApp() {
+function HomePage() {
   const { connectSocket, socket, userInfo } = useContext(LocationContext);
 
   useEffect(() => {
@@ -22,7 +22,7 @@ export function LocationSharingApp() {
 
   return (
     <div className={`min-h-screen flex flex-col `}>
-      <div className="flex-1 p-4 bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
+      <div className="flex-1 p-4 pb-10 bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
         <div className="max-w-6xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
           <div className="flex flex-col md:flex-row">
             <div className="p-4 md:w-1/2">
@@ -33,8 +33,10 @@ export function LocationSharingApp() {
                 >
                   Current Location
                 </Label>
-                <div className="flex items-center bg-gray-100 dark:bg-gray-700 p-2 rounded-md">
-                  <MapPin className="h-5 w-5 text-blue-500 mr-2" />
+                <div className="flex items-center bg-gray-100 dark:bg-gray-700 p-2 rounded-md gap-2">
+                  <div>
+                    <MapPin className="h-5 w-5 text-blue-500 " />
+                  </div>
                   <span
                     id="current-location"
                     className="text-gray-800 dark:text-white"
@@ -64,3 +66,5 @@ export function LocationSharingApp() {
     </div>
   );
 }
+
+export default HomePage;

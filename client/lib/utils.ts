@@ -30,3 +30,7 @@ export async function fetchLocation(latitude: number, longitude: number) {
 export function formatDate(date: Date) {
   return new Date(date).toLocaleString();
 }
+
+export function isEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
