@@ -9,7 +9,7 @@ const router = express.Router();
 router.get("/", (_req: Request, res: Response) => {
   successResponse(res, {
     statusCode: 200,
-    message: "Location Sharing App API",
+    message: "Location Sharing App API222222222.",
   });
 });
 

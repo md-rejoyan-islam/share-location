@@ -20,54 +20,23 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import LocationContext from "@/context/location-context";
-import { GeolocationPosition } from "@/lib/types";
+import { formatDate } from "@/lib/utils";
 import { Home, X } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
-import Map from "./map/map";
-
-interface SharedUser {
-  name: string;
-  location: string;
-  shareName: string;
-  sharedAt: string;
-}
-
-const sharedUser: SharedUser = {
-  name: "Alice",
-  location: "Los Angeles, CA 90001, USA",
-  shareName: "Work",
-  sharedAt: new Date().toISOString(),
-};
-
-// Simulated Google Maps API
-const GoogleMap = ({ location }: { location: GeolocationPosition | null }) => (
-  <div className="w-full h-full bg-gray-300 dark:bg-gray-700 rounded-lg overflow-hidden relative">
-    <div className="absolute inset-0 flex items-center justify-center">
-      {/* <MapPin className="h-8 w-8 text-red-500" /> */}
-      <Map location={location} />
-      {/* <MapPage location={position} /> */}
-    </div>
-    <div className="absolute bottom-4 left-4 right-4 bg-white dark:bg-gray-800 p-2 rounded shadow z-[400]">
-      <p className="text-sm text-gray-600 dark:text-gray-300">dhaka</p>
-    </div>
-  </div>
-);
+import GoogleMap from "./google-map";
 
 export function ViewerPageComponent() {
   const { roomId } = useParams();
 
-  const { socket, connectSocket, position, visitorRoomInfo } =
+  const { socket, connectSocket, visitorRoomInfo } =
     useContext(LocationContext);
 
   const [isNameDialogOpen, setIsNameDialogOpen] = useState(true);
   const [wantSharedLocation, setWantSharedLocation] = useState(false);
   const [viewerName, setViewerName] = useState("");
-  const [sharedLocation, setSharedLocation] = useState<SharedUser | null>(null);
   const [isSharing, setIsSharing] = useState(false);
-
-  console.log(visitorRoomInfo);
 
   // connect to the socket
   useEffect(() => {
@@ -77,18 +46,6 @@ export function ViewerPageComponent() {
         socket.disconnect();
       }
     };
-  }, []);
-  // useEffect(() => {
-  //   if (!viewerName) {
-  //     setIsNameDialogOpen(true);
-  //   }
-  // }, [viewerName]);
-
-  useEffect(() => {
-    // Simulate fetching shared location
-    setTimeout(() => {
-      setSharedLocation(sharedUser);
-    }, 2000);
   }, []);
 
   const handleNameSubmit = (
@@ -105,7 +62,7 @@ export function ViewerPageComponent() {
         roomId,
         userName: viewerName,
         wantSharedLocation,
-        position,
+        position: visitorRoomInfo.position,
       });
     }
   };
@@ -129,24 +86,28 @@ export function ViewerPageComponent() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {sharedLocation ? (
+                {visitorRoomInfo.roomId ? (
                   <div className="space-y-4">
                     <div>
                       <p className="font-semibold">
-                        {sharedLocation.name}&apos;s {sharedLocation.shareName}
+                        {visitorRoomInfo.hostName}
                       </p>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {sharedLocation.location}
+                        {visitorRoomInfo.location}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Shared at:{" "}
-                        {new Date(sharedLocation.sharedAt).toLocaleString()}
+                        Shared at: {formatDate(visitorRoomInfo.joinedAt)}
                       </p>
                     </div>
                     <div className="h-[300px]">
-                      <GoogleMap location={visitorRoomInfo?.position || null} />
+                      <GoogleMap
+                        location={visitorRoomInfo.location}
+                        position={
+                          visitorRoomInfo?.position || { lat: 0, lng: 0 }
+                        }
+                      />
                     </div>
                   </div>
                 ) : (

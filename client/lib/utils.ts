@@ -24,3 +24,9 @@ export async function fetchLocation(latitude: number, longitude: number) {
 
   return data.results[0]?.formatted || "Unknown location";
 }
+
+// 2024-11-17T15:08:33.214Z to  17/11/2024, 21:09:26
+
+export function formatDate(date: Date) {
+  return new Date(date).toLocaleString();
+}

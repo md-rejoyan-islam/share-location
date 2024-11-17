@@ -36,7 +36,7 @@ function LocationMarker({
 }
 
 function MapWithSSR({ location }: { location: GeolocationPosition | null }) {
-  if (!location) {
+  if (!location?.lat || !location?.lng) {
     return <p>No location found</p>;
   } else {
     return (

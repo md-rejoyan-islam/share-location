@@ -5,9 +5,9 @@ import dynamic from "next/dynamic";
 const MapWithNoSSR = dynamic(() => import("./map-with-ssr"), { ssr: false });
 
 export default function Map({
-  location,
+  position,
 }: {
-  location: GeolocationPosition | null;
+  position: GeolocationPosition | null;
 }) {
-  return <MapWithNoSSR location={location} />;
+  return <MapWithNoSSR location={position} />;
 }

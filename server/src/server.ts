@@ -99,6 +99,7 @@ io.on("connection", (socket: CustomSocket) => {
       updatedAt: new Date(),
       userName: data.userName,
     };
+
     if (roomExists) {
       socket.join(data.roomId);
 
@@ -107,6 +108,8 @@ io.on("connection", (socket: CustomSocket) => {
         // update total connected users
         roomExists.totalConnectedUsers.push(connectUser);
 
+        console.log("userJoinedRoom", connectUser);
+
         hostUser.emit("userJoinedRoom", {
           ...connectUser,
         });
@@ -114,10 +117,18 @@ io.on("connection", (socket: CustomSocket) => {
       // msg to joiner
       io.to(`${socket.id}`).emit("roomJoined", {
         status: "OK",
+        roomId: data.roomId,
+        joinedAt: new Date(),
+        userId: socket.id,
+        position: roomExists.position,
+        updatedAt: new Date(),
+        hostId: roomExists.hostId,
+        hostName: roomExists.hostName,
+        createdAt: new Date(),
       });
-      io.to(`${socket.id}`).emit("userJoinedRoom", {
-        ...connectUser,
-      });
+      // io.to(`${socket.id}`).emit("userJoinedRoom", {
+      //   ...connectUser,
+      // });
     } else {
       io.to(`${socket.id}`).emit("roomJoined", {
         status: "ERROR",

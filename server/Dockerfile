@@ -1,6 +1,8 @@
-FROM --platform=arm64 node:20-alpine3.19 
+FROM node:20-alpine3.19 
 
 WORKDIR /server
+
+RUN npm install -g nodemon
 
 COPY package*.json ./
 
