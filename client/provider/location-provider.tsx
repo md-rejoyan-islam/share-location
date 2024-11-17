@@ -129,7 +129,7 @@ export const LocationProvider = ({
     if (socket) {
       // roomCreated
       socket.on("roomCreated", (data: userRoom) => {
-        toast.success("You are live!", {
+        toast.success("Your location is live!", {
           autoClose: 2000,
         });
         // setRoomInfo(data);
@@ -169,7 +169,7 @@ export const LocationProvider = ({
         });
         // setVisitorRoomInfo(data);
 
-        toast.info(`${data.userName} joined the room`, {
+        toast.info(`${data.userName} watches your location.`, {
           autoClose: 2000,
         });
 
@@ -192,7 +192,7 @@ export const LocationProvider = ({
           }
           return null;
         });
-        toast.info(`${data.userName} left the room`, {
+        toast.info(`${data.userName} is now offline.`, {
           autoClose: 2000,
         });
       });

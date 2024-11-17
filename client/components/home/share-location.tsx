@@ -25,6 +25,7 @@ export default function ShareLocation({}) {
 
   // handle share location
   const handleShareLocation = async () => {
+    // test email field is not empty
     if (!userInfo.email)
       return toast({
         variant: "destructive",
@@ -40,6 +41,7 @@ export default function ShareLocation({}) {
         description: "Please enter a valid email to share location",
       });
 
+    // test name field is not empty
     if (!userInfo.name)
       return toast({
         variant: "destructive",
@@ -54,17 +56,19 @@ export default function ShareLocation({}) {
         hostName: userInfo.name,
       });
     }
-
+    // set socket status
     setSocketStatus("CONNECTING");
   };
 
   // handle stop share location
   const handleStopShareLocation = () => {
+    // remove room
     if (socket?.connected && hostRooom?.roomId) {
       socket.emit("removeRoom", {
         roomId: hostRooom?.roomId,
       });
     }
+    // set socket status
     setSocketStatus("DISCONNECTED");
   };
 

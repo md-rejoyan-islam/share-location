@@ -1,5 +1,6 @@
 import LocationContext from "@/context/location-context";
-import { MapPin, UserCheck, X } from "lucide-react";
+import { formatDate } from "@/lib/utils";
+import { Clock, UserCheck, X } from "lucide-react";
 import { useContext } from "react";
 import { Button } from "../ui/button";
 
@@ -33,10 +34,10 @@ export default function ConnectedUser() {
                   Disconnect
                 </Button>
               </div>
-              <div className="text-sm text-green-600 dark:text-green-300">
-                <MapPin className="h-4 w-4 inline mr-2" />
-                {/* {user.position} */}
-                Dhaka
+
+              <div className="text-sm  mt-1 text-green-700 dark:text-green-200">
+                <Clock className="h-4 w-4 inline mr-2" />
+                Joined at: {formatDate(user.joinAt)}
               </div>
             </li>
           ))}

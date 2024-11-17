@@ -1,5 +1,5 @@
-import { ViewerPageComponent } from "@/components/viewer-page";
+import { SharedLocationPage } from "@/components/location/shared-location";
 
 export default function LocationPage() {
-  return <ViewerPageComponent />;
+  return <SharedLocationPage />;
 }
