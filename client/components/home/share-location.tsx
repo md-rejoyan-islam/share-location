@@ -1,63 +1,25 @@
 import LocationContext from "@/context/location-context";
 import { useToast } from "@/hooks/use-toast";
-import { isEmail } from "@/lib/utils";
-import { Clipboard, Share2 } from "lucide-react";
-import { useContext, useState } from "react";
+import { Clipboard, Mail, Share2, SquareUserRound } from "lucide-react";
+import { useContext } from "react";
 import { Button } from "../ui/button";
-import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 
 export default function ShareLocation({}) {
-  const {
-    socket,
-    setSocketStatus,
-    hostRooom,
-    userInfo: userInformation,
-  } = useContext(LocationContext);
+  const { socket, hostRooom, userInfo } = useContext(LocationContext);
 
-  const [userInfo, setUserInfo] = useState({
-    name: "",
-    email: "",
-  });
   const { toast } = useToast();
-
-  console.log(hostRooom);
 
   // handle share location
   const handleShareLocation = async () => {
-    // test email field is not empty
-    if (!userInfo.email)
-      return toast({
-        variant: "destructive",
-        title: "Uh oh! Email is required!",
-        description: "Please enter a email to share location",
-      });
-
-    // test email validation
-    if (!isEmail(userInfo.email))
-      return toast({
-        variant: "destructive",
-        title: "Uh oh! Invalid email!",
-        description: "Please enter a valid email to share location",
-      });
-
-    // test name field is not empty
-    if (!userInfo.name)
-      return toast({
-        variant: "destructive",
-        title: "Uh oh! Name is required!",
-        description: "Please enter a name to share location",
-      });
-
     // create room
     if (socket?.connected && !hostRooom?.roomId) {
       socket.emit("createRoom", {
-        position: userInformation.position,
+        position: userInfo.position,
         hostName: userInfo.name,
+        hostEmail: userInfo.email,
       });
     }
-    // set socket status
-    setSocketStatus("CONNECTING");
   };
 
   // handle stop share location
@@ -68,8 +30,6 @@ export default function ShareLocation({}) {
         roomId: hostRooom?.roomId,
       });
     }
-    // set socket status
-    setSocketStatus("DISCONNECTED");
   };
 
   return (
@@ -81,21 +41,16 @@ export default function ShareLocation({}) {
         Share Location
       </Label>
       <div className="flex flex-col space-y-2">
-        <Input
-          type="text"
-          id="location"
-          placeholder="Enter a email to share location "
-          value={userInfo.email}
-          onChange={(e) => setUserInfo({ ...userInfo, email: e.target.value })}
-        />
-        <Input
-          type="text"
-          id="share-name"
-          placeholder="Enter a name to share location "
-          value={userInfo.name}
-          onChange={(e) => setUserInfo({ ...userInfo, name: e.target.value })}
-        />
-        <div className="flex gap-2 flex-wrap-reverse">
+        <p className="text-gray-600 dark:text-gray-40 dark:bg-gray-700 dark:text-white flex gap-2 px-2 items-center bg-gray-50 py-1.5  rounded-sm ">
+          <SquareUserRound className="w-5 h-5 text-green-700 dark:text-green-200" />
+          {userInfo.name}
+        </p>
+        <p className="text-gray-600 dark:text-gray-40 dark:bg-gray-700 dark:text-white flex gap-2 px-2 items-center bg-gray-50 py-1.5  rounded-sm ">
+          <Mail className="w-5 h-5 text-green-700 dark:text-green-200" />
+          {userInfo.email}
+        </p>
+
+        <div className="flex gap-2 flex-wrap-reverse pt-1.5">
           <Button
             variant="outline"
             className="flex-grow"

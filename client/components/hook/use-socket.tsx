@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
 export const useSocket = () => {
@@ -10,14 +10,20 @@ export const useSocket = () => {
     throw new Error("Socket URL is missing!");
   }
 
-  const connectSocket = () => {
+  useEffect(() => {
     if (!socket) {
       const newSocket: Socket = io(SOCKET_URL);
       setSocket(newSocket);
       return;
     }
     socket.connect();
-  };
 
-  return { socket, connectSocket };
+    return () => {
+      if (socket?.connected) {
+        socket.disconnect();
+      }
+    };
+  }, [socket, SOCKET_URL]);
+
+  return { socket };
 };

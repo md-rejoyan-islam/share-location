@@ -1,8 +1,7 @@
 import LocationContext from "@/context/location-context";
-import { formatDate } from "@/lib/utils";
-import { Clock, UserCheck, X } from "lucide-react";
+import { Mail, Timer, UserCheck } from "lucide-react";
 import { useContext } from "react";
-import { Button } from "../ui/button";
+import TimeDifference from "../time-difference";
 
 export default function ConnectedUser() {
   const { hostRooom } = useContext(LocationContext);
@@ -23,21 +22,16 @@ export default function ConnectedUser() {
                 <div className="flex items-center">
                   <UserCheck className="h-5 w-5 mr-2" />
                   {user.userName}
-                  {/* ({user.shareName}) */}
                 </div>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  // onClick={() => handleDisconnect(user.userId)}
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Disconnect
-                </Button>
               </div>
 
-              <div className="text-sm  mt-1 text-green-700 dark:text-green-200">
-                <Clock className="h-4 w-4 inline mr-2" />
-                Joined at: {formatDate(user.joinAt)}
+              <div className="text-sm  mt-1 text-gray-500">
+                <Mail className="h-4 w-4 inline mr-2" />
+                {user.userEmail}
+              </div>
+              <div className="text-sm  mt-1 text-gray-500">
+                <Timer className="h-4 w-4 inline mr-2" />
+                <TimeDifference joinedTime={user.joinAt} />
               </div>
             </li>
           ))}

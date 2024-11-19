@@ -57,3 +57,44 @@ export interface HostUser {
   updatedAt: Date;
   visitorUsers: VisitorUser[];
 }
+
+// check
+export interface USER_INFO {
+  name: string;
+  email: string;
+  position: { lat: number; lng: number };
+  userId: string; // socket.id
+  location: string;
+}
+
+export interface CONNECTED_USER {
+  userId: string; // socket.id
+  joinAt: Date;
+  position: { lat: number; lng: number };
+  updatedAt: Date;
+  userName: string;
+  userEmail: string;
+}
+
+export interface HOST_ROOM {
+  roomId: string;
+  position: { lat: number; lng: number };
+  totalConnectedUsers: CONNECTED_USER[];
+  hostId: string;
+  hostName: string;
+  hostEmail: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+export interface VISITOR_IN_ROOM {
+  roomId: string;
+  position: { lat: number; lng: number };
+  hostPosition: { lat: number; lng: number };
+  hostId: string;
+  hostName: string;
+  hostEmail: string;
+  updatedAt: Date;
+  userId: string;
+  joinedAt: Date;
+  location: string;
+}

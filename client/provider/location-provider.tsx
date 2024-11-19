@@ -1,91 +1,53 @@
 "use client";
 import { useSocket } from "@/components/hook/use-socket";
 import LocationContext from "@/context/location-context";
-import { SocketStatus } from "@/lib/types";
+import {
+  defaultHostRoom,
+  defaultUserInfo,
+  defaultVisitorInRoom,
+} from "@/lib/default-value";
+import {
+  HOST_ROOM,
+  SocketStatus,
+  USER_INFO,
+  VISITOR_IN_ROOM,
+} from "@/lib/types";
 import { fetchLocation } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-
-interface connectedUser {
-  userId: string;
-  joinAt: Date;
-  position: { lat: number; lng: number };
-  updatedAt: Date;
-  userName: string;
-}
-
-interface userRoom {
-  roomId: string;
-  position: { lat: number; lng: number };
-  totalConnectedUsers: connectedUser[];
-  hostId: string;
-  hostName: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface visitorRoom {
-  roomId?: string;
-  position: { lat: number; lng: number };
-  hostId?: string;
-  hostName: string;
-  updatedAt: Date;
-  userId: string;
-  joinedAt: Date;
-  location: string;
-}
-export interface userInfo {
-  name: string;
-  email: string;
-  position: { lat: number; lng: number };
-  userId: string;
-  location: string;
-}
-export interface hostRooom {
-  roomId: string;
-  position: { lat: number; lng: number };
-  totalConnectedUsers: connectedUser[];
-  hostId: string;
-  hostName: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 export const LocationProvider = ({
   children,
 }: {
   children: React.ReactNode;
 }) => {
-  const { socket, connectSocket } = useSocket();
+  const { socket } = useSocket();
   const [socketStatus, setSocketStatus] =
     useState<SocketStatus>("DISCONNECTED");
 
-  const [userInfo, setUserInfo] = useState<userInfo>({
-    name: "",
-    email: "",
-    position: { lat: 0, lng: 0 },
-    location: "Loading...",
-    userId: "",
-  });
-  const [hostRooom, setHostRoom] = useState<hostRooom | null>(null);
+  // default user info
+  const [userInfo, setUserInfo] = useState<USER_INFO>(defaultUserInfo);
 
-  const [roomInfo, setRoomInfo] = useState<userRoom | null>(null);
-  const [visitorRoomInfo, setVisitorRoomInfo] = useState<visitorRoom>({
-    position: { lat: 0, lng: 0 },
-    hostName: "",
-    userId: "",
-    updatedAt: new Date(),
-    joinedAt: new Date(),
-    location: "",
-  });
+  const [hostRooom, setHostRoom] = useState<HOST_ROOM>(defaultHostRoom);
 
-  // Get the current location
+  const [visitorRoomInfo, setVisitorRoomInfo] =
+    useState<VISITOR_IN_ROOM>(defaultVisitorInRoom);
+
+  console.log("user position");
+
+  console.log(userInfo.position);
+  console.log("host position");
+
+  console.log(hostRooom.position);
+
+  // Get the current location and update the user info
   useEffect(() => {
     // Ensure the geolocation code runs only in the browser
     if (typeof window !== "undefined" && navigator.geolocation) {
       const watcherId = navigator.geolocation.watchPosition(
         (position) => {
-          // fetch location from lat and lng
+          // fetch location from lat and lng and update user info
+
           fetchLocation(
             position.coords.latitude,
             position.coords.longitude
@@ -98,6 +60,17 @@ export const LocationProvider = ({
               },
               location,
             }));
+
+            setHostRoom((prev) => {
+              return {
+                ...prev,
+                position: {
+                  lat: position.coords.latitude,
+                  lng: position.coords.longitude,
+                },
+                location,
+              };
+            });
           });
         },
         (error) => {
@@ -128,11 +101,11 @@ export const LocationProvider = ({
   useEffect(() => {
     if (socket) {
       // roomCreated
-      socket.on("roomCreated", (data: userRoom) => {
+      socket.on("roomCreated", (data: HOST_ROOM) => {
         toast.success("Your location is live!", {
           autoClose: 2000,
         });
-        // setRoomInfo(data);
+
         setHostRoom((prev) => {
           return {
             ...prev,
@@ -140,6 +113,7 @@ export const LocationProvider = ({
             position: data.position,
             hostId: data.hostId,
             hostName: data.hostName,
+            hostEmail: data.hostEmail,
             createdAt: data.createdAt,
             updatedAt: data.updatedAt,
             totalConnectedUsers: data.totalConnectedUsers,
@@ -150,47 +124,17 @@ export const LocationProvider = ({
         toast.error("Room removed", {
           autoClose: 2000,
         });
-        setHostRoom(null);
-      });
-
-      socket.on("userJoinedRoom", (data) => {
-        setHostRoom((prev) => {
-          if (prev) {
-            return {
-              ...prev,
-              totalConnectedUsers: prev.totalConnectedUsers.find(
-                (user) => user.userId === data.userId
-              )
-                ? prev.totalConnectedUsers
-                : [...prev.totalConnectedUsers, data],
-            };
-          }
-          return null;
-        });
-        // setVisitorRoomInfo(data);
-
-        toast.info(`${data.userName} watches your location.`, {
-          autoClose: 2000,
-        });
-
-        if (hostRooom?.position) {
-          socket.emit("updateLocation", {
-            position: hostRooom.position,
-          });
-        }
+        setHostRoom(defaultHostRoom);
       });
 
       socket.on("userLeftRoom", (data) => {
         setHostRoom((prev) => {
-          if (prev) {
-            return {
-              ...prev,
-              totalConnectedUsers: prev.totalConnectedUsers.filter(
-                (user) => user.userId !== data.userId
-              ),
-            };
-          }
-          return null;
+          return {
+            ...prev,
+            totalConnectedUsers: prev.totalConnectedUsers.filter(
+              (user) => user.userId !== data.userId
+            ),
+          };
         });
         toast.info(`${data.userName} is now offline.`, {
           autoClose: 2000,
@@ -199,15 +143,17 @@ export const LocationProvider = ({
 
       // when user join room
       socket.on("roomJoined", (data) => {
-        console.log(data.position);
+        if (data.status === "ERROR") return;
 
         fetchLocation(data.position.lat, data.position.lng).then((location) => {
           setVisitorRoomInfo((prev) => {
             return {
               ...prev,
               hostName: data.hostName,
+              hostEmail: data.hostEmail,
               roomId: data.roomId,
               position: data.position,
+              hostPosition: data.hostPosition,
               joinedAt: data.joinedAt,
               updatedAt: data.updatedAt,
               userId: data.userId,
@@ -218,18 +164,45 @@ export const LocationProvider = ({
         });
       });
 
+      // when user joined room notify host
+      socket.on("userJoinedRoom", (data) => {
+        setHostRoom((prev) => {
+          return {
+            ...prev,
+            totalConnectedUsers: prev.totalConnectedUsers.find(
+              (user) => user.userId === data.userId
+            )
+              ? prev.totalConnectedUsers
+              : [...prev.totalConnectedUsers, data],
+          };
+        });
+        // setVisitorRoomInfo(data);
+        toast.info(`${data.userName} watches your location.`, {
+          autoClose: 2000,
+        });
+
+        // socket.emit("updateLocation", {
+        //   position: hostRooom && hostRooom?.position,
+        // });
+      });
+
       // when update location
       socket.on("updateLocationResponse", (data) => {
-        fetchLocation(data.position.lat, data.position.lng).then((location) => {
-          setVisitorRoomInfo((prev) => {
-            return {
-              ...prev,
-              position: data.position,
-              updatedAt: new Date(),
-              location,
-            };
-          });
-        });
+        console.log("updateLocationResponse", data);
+
+        fetchLocation(data.hostPosition.lat, data.hostPosition.lng).then(
+          (location) => {
+            setVisitorRoomInfo((prev) => {
+              return {
+                ...prev,
+                position: data.position,
+                hostPosition: data.hostPosition,
+                updatedAt: new Date(),
+                location,
+              };
+            });
+          }
+        );
       });
       // socket.on("disconnect", (data) => {
       //   setSocketStatus("DISCONNECTED");
@@ -259,22 +232,21 @@ export const LocationProvider = ({
   }, [socket]);
 
   useEffect(() => {
-    if (socket) {
-      socket.emit("updateLocation", {
-        position: hostRooom?.position,
-      });
+    if (socket && hostRooom.roomId) {
+      if (userInfo?.position.lat) {
+        socket.emit("updateLocation", {
+          hostPosition: userInfo?.position,
+        });
+      }
     }
-  }, [hostRooom?.position]);
+  }, [userInfo?.position, socket, hostRooom.roomId]);
 
   return (
     <LocationContext.Provider
       value={{
         socket,
         socketStatus,
-        roomInfo,
-        connectSocket,
         setSocketStatus,
-        setRoomInfo,
         visitorRoomInfo,
         userInfo,
         setUserInfo,

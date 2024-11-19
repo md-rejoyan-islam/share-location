@@ -1,47 +1,37 @@
-import { SocketStatus, UserRoom } from "@/lib/types";
-import { hostRooom, userInfo, visitorRoom } from "@/provider/location-provider";
+import {
+  defaultHostRoom,
+  defaultUserInfo,
+  defaultVisitorInRoom,
+} from "@/lib/default-value";
+import {
+  HOST_ROOM,
+  SocketStatus,
+  USER_INFO,
+  VISITOR_IN_ROOM,
+} from "@/lib/types";
 import { createContext } from "react";
 import { Socket } from "socket.io-client";
 
 interface LocationContextType {
   socket: Socket | null;
   socketStatus: SocketStatus;
-  roomInfo: UserRoom | null;
-  connectSocket: () => void;
   setSocketStatus: (status: SocketStatus) => void;
-  setRoomInfo: (room: UserRoom | null) => void;
-  hostRooom: hostRooom | null;
-  setHostRoom: (room: hostRooom | null) => void;
-  userInfo: userInfo;
-  setUserInfo: (user: userInfo) => void;
-  setVisitorRoomInfo: (visitorRoomInfo: visitorRoom) => void;
-  visitorRoomInfo: visitorRoom;
+  hostRooom: HOST_ROOM;
+  setHostRoom: (room: HOST_ROOM) => void;
+  userInfo: USER_INFO;
+  setUserInfo: (user: USER_INFO) => void;
+  setVisitorRoomInfo: (visitorRoomInfo: VISITOR_IN_ROOM) => void;
+  visitorRoomInfo: VISITOR_IN_ROOM;
 }
 
 const LocationContext = createContext<LocationContextType>({
   socket: null,
   socketStatus: "DISCONNECTED",
-  roomInfo: null,
-  connectSocket: () => {},
   setSocketStatus: () => {},
-  setRoomInfo: () => {},
-  visitorRoomInfo: {
-    position: { lat: 0, lng: 0 },
-    hostName: "",
-    userId: "",
-    updatedAt: new Date(),
-    joinedAt: new Date(),
-    location: "",
-  },
-  hostRooom: null,
+  visitorRoomInfo: defaultVisitorInRoom,
+  hostRooom: defaultHostRoom,
   setHostRoom: () => {},
-  userInfo: {
-    name: "",
-    email: "",
-    position: { lat: 0, lng: 0 },
-    userId: "",
-    location: "",
-  },
+  userInfo: defaultUserInfo,
   setUserInfo: () => {},
   setVisitorRoomInfo: () => {},
 });
